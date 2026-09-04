@@ -1,9 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-
-const WHATSAPP_NUMBER = '';
-const INSTAGRAM_URL = '';
+import { siteConfig } from './site-config';
 
 const situations = [
   { number: '01', title: 'Voo atrasado', text: 'A duração do atraso, as informações prestadas e a assistência oferecida fazem parte da análise de cada situação.' },
@@ -22,9 +20,11 @@ const faqs = [
 
 function WhatsAppIcon() { return <img src="/whatsapp.svg" alt="" width="22" height="22" />; }
 function makeWhatsAppUrl(category?: string) {
-  const subject = category ? `um problema relacionado a ${category.toLowerCase()}` : 'um problema com meu voo';
-  const message = encodeURIComponent(`Olá, Dra. Fernanda. Vim pelo site e gostaria de falar sobre ${subject}.`);
-  return WHATSAPP_NUMBER ? `https://wa.me/${WHATSAPP_NUMBER}?text=${message}` : `https://wa.me/?text=${message}`;
+  const labels: Record<string, string> = { Atraso: 'voo atrasado', Cancelamento: 'voo cancelado', Overbooking: 'overbooking', Bagagem: 'problemas com bagagem' };
+  const message = category
+    ? `Olá, Dra. Fernanda! Vim pelo seu site e gostaria de falar sobre um problema relacionado a ${labels[category] ?? category.toLowerCase()}.`
+    : 'Olá, Dra. Fernanda! Vim pelo seu site e gostaria de falar sobre um problema relacionado ao meu voo.';
+  return `https://wa.me/${siteConfig.contact.whatsapp}?text=${encodeURIComponent(message)}`;
 }
 
 export default function Home() {
@@ -40,6 +40,17 @@ export default function Home() {
     document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
     return () => { window.removeEventListener('scroll', onScroll); observer.disconnect(); };
   }, []);
+  useEffect(() => {
+    document.documentElement.classList.add('page-ready');
+    let ticking = false;
+    const updateDepth = () => {
+      document.documentElement.style.setProperty('--hero-depth', `${Math.min(window.scrollY * 0.055, 28)}px`);
+      ticking = false;
+    };
+    const onDepth = () => { if (!ticking) { requestAnimationFrame(updateDepth); ticking = true; } };
+    window.addEventListener('scroll', onDepth, { passive: true });
+    return () => { window.removeEventListener('scroll', onDepth); document.documentElement.classList.remove('page-ready'); };
+  }, []);
   useEffect(() => { document.body.style.overflow = menuOpen ? 'hidden' : ''; return () => { document.body.style.overflow = ''; }; }, [menuOpen]);
   const closeMenu = () => setMenuOpen(false);
 
@@ -54,10 +65,12 @@ export default function Home() {
 
     <main>
       <section className="hero" id="inicio">
+        <div className="hero-curtain" aria-hidden="true" />
         <div className="route-signature" aria-hidden="true"><span className="route-plane">✦</span></div>
-        <div className="hero-copy reveal is-visible"><p className="eyebrow">Direito do passageiro aéreo</p><h1>Seu voo saiu do plano.<br /><em>Seus direitos não.</em></h1><p className="hero-intro">Atuação jurídica voltada a passageiros que enfrentaram atrasos, cancelamentos, overbooking ou problemas com bagagem.</p><div className="hero-actions"><a className="button button-gold" href={makeWhatsAppUrl()} target="_blank" rel="noreferrer">Conte o que aconteceu <span>↗</span></a><a className="text-link" href="#atuacao">Conheça a atuação <span>↓</span></a></div><p className="whatsapp-note"><span /> Atendimento pelo WhatsApp</p></div>
-        <div className="hero-portrait reveal is-visible"><div className="portrait-halo" /><img src="/fernanda.jpeg" alt="Retrato profissional da Dra. Fernanda Leite" width="640" height="640" /><div className="portrait-caption"><span>Fernanda Leite</span><small>Advogada do passageiro aéreo</small></div></div>
+        <div className="hero-copy"><p className="eyebrow hero-step step-1">Direito do passageiro aéreo</p><div className="title-mask"><h1 className="hero-step step-2">Seu voo saiu do plano.<br /><em>Seus direitos não.</em></h1></div><p className="hero-intro hero-step step-3">Atuação jurídica voltada a passageiros que enfrentaram atrasos, cancelamentos, overbooking ou problemas com bagagem.</p><div className="hero-actions hero-step step-4"><a className="button button-gold" href={makeWhatsAppUrl()} target="_blank" rel="noreferrer">Conte o que aconteceu <span>↗</span></a><a className="text-link" href="#atuacao">Conheça a atuação <span>↓</span></a></div><p className="whatsapp-note hero-step step-4"><span /> Atendimento pelo WhatsApp</p></div>
+        <div className="hero-portrait"><div className="portrait-halo" /><div className="portrait-reveal"><img src="/fernanda-recorte.png" alt="Retrato profissional da Dra. Fernanda Leite" width="1146" height="1372" /></div><div className="portrait-caption"><span>Fernanda Leite</span><small>Advogada do passageiro aéreo</small></div></div>
         <div className="hero-index" aria-hidden="true">FL · 01</div>
+        <a className="scroll-indicator" href="#atuacao"><span>Scroll</span><i /></a>
       </section>
 
       <section className="practice light-section" id="atuacao">
@@ -78,7 +91,7 @@ export default function Home() {
       <section className="final-cta"><div className="final-route" aria-hidden="true" /><p className="eyebrow reveal">Converse sobre o seu caso</p><h2 className="reveal">Seu voo teve<br /><em>um problema?</em></h2><p className="reveal">Conte o que aconteceu e dê o primeiro passo para entender a sua situação.</p><a className="button button-gold reveal" href={makeWhatsAppUrl()} target="_blank" rel="noreferrer">Falar com a Dra. Fernanda <span>↗</span></a></section>
     </main>
 
-    <footer><div className="footer-main"><img src="/logo.jpeg" alt="Dra. Fernanda Leite" /><nav aria-label="Links do rodapé"><a href="#inicio">Início</a><a href="#atuacao">Atuação</a><a href="#sobre">Sobre</a><a href="#duvidas">Dúvidas</a><a href={makeWhatsAppUrl()} target="_blank" rel="noreferrer">WhatsApp</a>{INSTAGRAM_URL && <a href={INSTAGRAM_URL} target="_blank" rel="noreferrer">Instagram</a>}</nav></div><div className="footer-bottom"><p>© {new Date().getFullYear()} Dra. Fernanda Leite. Todos os direitos reservados.</p><p>Conteúdo institucional e informativo. Resultados dependem das circunstâncias de cada caso.</p></div></footer>
+    <footer><div className="footer-main"><div className="footer-brand"><img src="/logo.jpeg" alt="Dra. Fernanda Leite" /><p>{siteConfig.area}</p></div><div className="footer-contact"><a href={makeWhatsAppUrl()} target="_blank" rel="noreferrer"><small>WhatsApp</small>{siteConfig.contact.whatsappDisplay}</a><a href={`mailto:${siteConfig.contact.email}`}><small>E-mail</small>{siteConfig.contact.email}</a><a href={siteConfig.contact.instagramUrl} target="_blank" rel="noreferrer"><small>Instagram</small>{siteConfig.contact.instagram}</a></div><nav aria-label="Links do rodapé"><a href="#inicio">Início</a><a href="#atuacao">Atuação</a><a href="#sobre">Sobre</a><a href="#duvidas">Dúvidas</a></nav></div><div className="footer-bottom"><p>© {new Date().getFullYear()} Dra. Fernanda Leite. Todos os direitos reservados.</p><p>Conteúdo institucional e informativo. Resultados dependem das circunstâncias de cada caso.</p></div></footer>
     <a className="floating-whatsapp" href={makeWhatsAppUrl()} target="_blank" rel="noreferrer" aria-label="Fale com a Dra. Fernanda pelo WhatsApp"><WhatsAppIcon /><span>Fale com a Dra. Fernanda</span></a>
   </>;
 }
