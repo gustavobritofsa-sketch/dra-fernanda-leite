@@ -44,6 +44,8 @@ export default function Home() {
       import('gsap'),
       import('gsap/ScrollTrigger'),
     ]);
+    await document.fonts.ready;
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
     if (!active) return;
     gsap.registerPlugin(ScrollTrigger);
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -104,7 +106,7 @@ export default function Home() {
   return <div ref={pageRef}>
     <div className="grain" aria-hidden="true" />
     <header ref={headerRef} className={`site-header ${scrolled ? 'scrolled' : ''}`}>
-      <a className="brand" href="#inicio" aria-label="Dra. Fernanda Leite — início"><img src="/logo-nova.jpg" alt="Dra. Fernanda Leite — Direito Aéreo" /></a>
+      <a className="brand" href="#inicio" aria-label="Dra. Fernanda Leite — início"><img src="/logo-transparente.png" alt="Dra. Fernanda Leite — Direito Aéreo" width="2171" height="724" /></a>
       <nav className="desktop-nav" aria-label="Navegação principal"><a href="#inicio">Início</a><a href="#atuacao">Atuação</a><a href="#como-funciona">Como funciona</a><a href="#sobre">Sobre</a><a href="#duvidas">Dúvidas</a></nav>
       <a className="header-cta" href={makeWhatsAppUrl()} target="_blank" rel="noreferrer">Falar no WhatsApp <span>↗</span></a>
       <button className="menu-button" type="button" aria-label={menuOpen ? 'Fechar menu' : 'Abrir menu'} aria-expanded={menuOpen} onClick={() => setMenuOpen(!menuOpen)}><span /><span /></button>
@@ -141,8 +143,9 @@ export default function Home() {
       <section className="final-cta"><div className="final-route" aria-hidden="true" /><p className="eyebrow reveal">Converse sobre o seu caso</p><h2 className="reveal">Seu voo teve<br /><em>um problema?</em></h2><p className="reveal">Conte o que aconteceu e dê o primeiro passo para entender a sua situação.</p><a className="button button-gold reveal" href={makeWhatsAppUrl()} target="_blank" rel="noreferrer">Falar com a Dra. Fernanda <span>↗</span></a></section>
     </main>
 
-    <footer><div className="footer-main"><div className="footer-brand"><img src="/logo-nova.jpg" alt="Dra. Fernanda Leite" /><p>{siteConfig.area}</p></div><div className="footer-contact"><a href={makeWhatsAppUrl()} target="_blank" rel="noreferrer"><small>WhatsApp</small>{siteConfig.contact.whatsappDisplay}</a><a href={`mailto:${siteConfig.contact.email}`}><small>E-mail</small>{siteConfig.contact.email}</a><a href={siteConfig.contact.instagramUrl} target="_blank" rel="noreferrer"><small>Instagram</small>{siteConfig.contact.instagram}</a></div><nav aria-label="Links do rodapé"><a href="#inicio">Início</a><a href="#atuacao">Atuação</a><a href="#sobre">Sobre</a><a href="#duvidas">Dúvidas</a></nav></div><div className="footer-bottom"><p>© {COPYRIGHT_YEAR} Dra. Fernanda Leite. Todos os direitos reservados.</p><p>Conteúdo institucional e informativo. Resultados dependem das circunstâncias de cada caso.</p></div></footer>
+    <footer><div className="footer-main"><div className="footer-brand"><img src="/logo-transparente.png" alt="Dra. Fernanda Leite" /><p>{siteConfig.area}</p></div><div className="footer-contact"><a href={makeWhatsAppUrl()} target="_blank" rel="noreferrer"><small>WhatsApp</small>{siteConfig.contact.whatsappDisplay}</a><a href={`mailto:${siteConfig.contact.email}`}><small>E-mail</small>{siteConfig.contact.email}</a><a href={siteConfig.contact.instagramUrl} target="_blank" rel="noreferrer"><small>Instagram</small>{siteConfig.contact.instagram}</a></div><nav aria-label="Links do rodapé"><a href="#inicio">Início</a><a href="#atuacao">Atuação</a><a href="#sobre">Sobre</a><a href="#duvidas">Dúvidas</a></nav></div><div className="footer-bottom"><p>© {COPYRIGHT_YEAR} Dra. Fernanda Leite. Todos os direitos reservados.</p><p>Conteúdo institucional e informativo. Resultados dependem das circunstâncias de cada caso.</p></div></footer>
     <a className="floating-whatsapp" href={makeWhatsAppUrl()} target="_blank" rel="noreferrer" aria-label="Fale com a Dra. Fernanda pelo WhatsApp"><WhatsAppIcon /><span>Fale com a Dra. Fernanda</span></a>
   </div>;
 }
+
 
