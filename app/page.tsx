@@ -1,8 +1,6 @@
 ﻿'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { siteConfig } from './site-config';
 
 const situations = [
@@ -19,6 +17,7 @@ const faqs = [
   ['Todo problema com voo gera indenização?', 'Não. A existência de um problema, por si só, não determina uma indenização. As circunstâncias, a conduta da companhia e os prejuízos efetivamente experimentados devem ser analisados individualmente.'],
   ['Como posso enviar meu caso para análise?', 'Inicie o contato pelo WhatsApp e relate brevemente o ocorrido. Depois, poderão ser solicitados documentos e informações do voo para uma avaliação individual.'],
 ];
+const COPYRIGHT_YEAR = 2026;
 
 function WhatsAppIcon() { return <img src="/whatsapp.svg" alt="" width="22" height="22" />; }
 function makeWhatsAppUrl(category?: string) {
@@ -37,7 +36,15 @@ export default function Home() {
   const [category, setCategory] = useState('Atraso');
   const [openFaq, setOpenFaq] = useState<number | null>(0);
   const whatsappUrl = useMemo(() => makeWhatsAppUrl(category), [category]);
-  useEffect(() => {
+  useLayoutEffect(() => {
+    let active = true;
+    let dispose = () => {};
+    void (async () => {
+    const [{ default: gsap }, { ScrollTrigger }] = await Promise.all([
+      import('gsap'),
+      import('gsap/ScrollTrigger'),
+    ]);
+    if (!active) return;
     gsap.registerPlugin(ScrollTrigger);
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let lastY = window.scrollY, ticking = false;
@@ -87,7 +94,9 @@ export default function Home() {
     }, pageRef);
     const refresh = () => ScrollTrigger.refresh(); window.addEventListener('load', refresh, { once: true });
     const fallback = window.setTimeout(() => headerRef.current && gsap.set(headerRef.current, { autoAlpha: 1 }), 3200);
-    return () => { window.clearTimeout(fallback); window.removeEventListener('scroll', onHeaderScroll); window.removeEventListener('load', refresh); ctx.revert(); };
+    dispose = () => { window.clearTimeout(fallback); window.removeEventListener('scroll', onHeaderScroll); window.removeEventListener('load', refresh); ctx.revert(); };
+    })();
+    return () => { active = false; dispose(); };
   }, []);
   useEffect(() => { document.body.style.overflow = menuOpen ? 'hidden' : ''; return () => { document.body.style.overflow = ''; }; }, [menuOpen]);
   const closeMenu = () => setMenuOpen(false);
@@ -132,7 +141,7 @@ export default function Home() {
       <section className="final-cta"><div className="final-route" aria-hidden="true" /><p className="eyebrow reveal">Converse sobre o seu caso</p><h2 className="reveal">Seu voo teve<br /><em>um problema?</em></h2><p className="reveal">Conte o que aconteceu e dê o primeiro passo para entender a sua situação.</p><a className="button button-gold reveal" href={makeWhatsAppUrl()} target="_blank" rel="noreferrer">Falar com a Dra. Fernanda <span>↗</span></a></section>
     </main>
 
-    <footer><div className="footer-main"><div className="footer-brand"><img src="/logo-nova.jpg" alt="Dra. Fernanda Leite" /><p>{siteConfig.area}</p></div><div className="footer-contact"><a href={makeWhatsAppUrl()} target="_blank" rel="noreferrer"><small>WhatsApp</small>{siteConfig.contact.whatsappDisplay}</a><a href={`mailto:${siteConfig.contact.email}`}><small>E-mail</small>{siteConfig.contact.email}</a><a href={siteConfig.contact.instagramUrl} target="_blank" rel="noreferrer"><small>Instagram</small>{siteConfig.contact.instagram}</a></div><nav aria-label="Links do rodapé"><a href="#inicio">Início</a><a href="#atuacao">Atuação</a><a href="#sobre">Sobre</a><a href="#duvidas">Dúvidas</a></nav></div><div className="footer-bottom"><p>© {new Date().getFullYear()} Dra. Fernanda Leite. Todos os direitos reservados.</p><p>Conteúdo institucional e informativo. Resultados dependem das circunstâncias de cada caso.</p></div></footer>
+    <footer><div className="footer-main"><div className="footer-brand"><img src="/logo-nova.jpg" alt="Dra. Fernanda Leite" /><p>{siteConfig.area}</p></div><div className="footer-contact"><a href={makeWhatsAppUrl()} target="_blank" rel="noreferrer"><small>WhatsApp</small>{siteConfig.contact.whatsappDisplay}</a><a href={`mailto:${siteConfig.contact.email}`}><small>E-mail</small>{siteConfig.contact.email}</a><a href={siteConfig.contact.instagramUrl} target="_blank" rel="noreferrer"><small>Instagram</small>{siteConfig.contact.instagram}</a></div><nav aria-label="Links do rodapé"><a href="#inicio">Início</a><a href="#atuacao">Atuação</a><a href="#sobre">Sobre</a><a href="#duvidas">Dúvidas</a></nav></div><div className="footer-bottom"><p>© {COPYRIGHT_YEAR} Dra. Fernanda Leite. Todos os direitos reservados.</p><p>Conteúdo institucional e informativo. Resultados dependem das circunstâncias de cada caso.</p></div></footer>
     <a className="floating-whatsapp" href={makeWhatsAppUrl()} target="_blank" rel="noreferrer" aria-label="Fale com a Dra. Fernanda pelo WhatsApp"><WhatsAppIcon /><span>Fale com a Dra. Fernanda</span></a>
   </div>;
 }
