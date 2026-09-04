@@ -63,28 +63,47 @@ export default function Home() {
     };
     window.addEventListener('scroll', onHeaderScroll, { passive: true });
     const ctx = gsap.context(() => {
-      const gate = ScrollTrigger.create({ trigger: '.hero-scroll', start: 'top top', end: 'bottom bottom' });
-      gate.disable();
+      document.documentElement.classList.add('intro-active');
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+      gsap.set('.intro-line', { yPercent: 115 });
+      gsap.set('.intro-photo', { autoAlpha: 0, scale: .94, y: 40, clipPath: 'inset(100% 0 0)', filter: 'blur(7px)' });
+      gsap.set('.intro-kicker', { autoAlpha: 0, y: 10 });
       gsap.set('.hero-line', { yPercent: 112 });
-      gsap.set('.portrait-reveal', { autoAlpha: 0, scale: .96, y: 20, clipPath: 'inset(100% 0 0)' });
+      gsap.set('.portrait-reveal', { autoAlpha: 0, scale: .98, clipPath: 'inset(12% 0 0)' });
       gsap.set(['.hero-secondary', '.hero-meta'], { autoAlpha: 0, y: 14 });
-      gsap.set(headerRef.current, { autoAlpha: 0 });
-      gsap.timeline({ onComplete: () => { gate.enable(); ScrollTrigger.refresh(); window.dispatchEvent(new Event('fernanda:intro-complete')); } })
-        .to('.hero-line-a', { yPercent: 0, duration: .72, ease: 'power4.out' })
-        .to('.hero-line-b', { yPercent: 0, duration: .72, ease: 'power4.out' }, '-=.58')
-        .to('.portrait-reveal', { autoAlpha: 1, scale: 1, y: 0, clipPath: 'inset(0% 0 0)', duration: .82, ease: 'power3.out' }, '-=.48')
-        .to(['.hero-secondary', '.hero-meta'], { autoAlpha: 1, y: 0, duration: .5, stagger: .08, ease: 'power2.out' }, '-=.22')
-        .to(headerRef.current, { autoAlpha: 1, duration: .42, ease: 'power2.out' }, '-=.28');
+      gsap.set(headerRef.current, { autoAlpha: 0, y: -10 });
+      const finishIntro = () => {
+        document.documentElement.classList.remove('intro-active');
+        document.documentElement.style.overflow = '';
+        document.body.style.overflow = '';
+        ScrollTrigger.refresh();
+        window.dispatchEvent(new Event('fernanda:intro-complete'));
+      };
+      const intro = gsap.timeline({ onComplete: finishIntro });
+      if (reduced) {
+        intro.to(['.intro-line', '.intro-photo', '.intro-kicker'], { autoAlpha: 1, yPercent: 0, y: 0, filter: 'blur(0px)', clipPath: 'inset(0)', duration: .25 })
+          .to('.site-intro', { autoAlpha: 0, duration: .22, delay: .25 })
+          .set('.site-intro', { visibility: 'hidden' })
+          .to(['.hero-line', '.portrait-reveal', '.hero-secondary', '.hero-meta', headerRef.current], { autoAlpha: 1, yPercent: 0, y: 0, clipPath: 'inset(0)', duration: .2 }, '-=.18');
+      } else {
+        intro.to('.intro-line-a', { yPercent: 0, duration: .95, ease: 'power4.out' }, .15)
+          .to('.intro-line-b', { yPercent: 0, duration: .95, ease: 'power4.out' }, .28)
+          .to('.intro-photo', { autoAlpha: 1, scale: 1, y: 0, clipPath: 'inset(0% 0 0)', filter: 'blur(0px)', duration: 1.08, ease: 'power4.out' }, .4)
+          .to('.intro-kicker', { autoAlpha: 1, y: 0, duration: .42, ease: 'power2.out' }, .82)
+          .to(['.intro-line', '.intro-kicker'], { y: -18, autoAlpha: .45, duration: .42, ease: 'power2.in' }, 1.35)
+          .to('.intro-photo', { scale: 1.025, y: -10, autoAlpha: .72, duration: .48, ease: 'power2.inOut' }, 1.35)
+          .to('.site-intro', { clipPath: 'inset(0 0 100% 0)', duration: .72, ease: 'power4.inOut' }, 1.48)
+          .to('.hero-line-a', { yPercent: 0, duration: .72, ease: 'power4.out' }, 1.55)
+          .to('.hero-line-b', { yPercent: 0, duration: .72, ease: 'power4.out' }, 1.67)
+          .to('.portrait-reveal', { autoAlpha: 1, scale: 1, clipPath: 'inset(0)', duration: .65, ease: 'power3.out' }, 1.58)
+          .to(['.hero-secondary', '.hero-meta'], { autoAlpha: 1, y: 0, duration: .46, stagger: .06, ease: 'power2.out' }, 1.72)
+          .to(headerRef.current, { autoAlpha: 1, y: 0, duration: .42, ease: 'power2.out' }, 1.52)
+          .set('.site-intro', { visibility: 'hidden' });
+      }
       if (!reduced) {
         const mm = gsap.matchMedia();
-        mm.add({ desktop: '(min-width:1024px)', tablet: '(min-width:768px) and (max-width:1023px)', mobile: '(max-width:767px)' }, ({ conditions }) => {
-          const c = conditions as { desktop?: boolean; tablet?: boolean }; const travel = c.desktop ? 68 : c.tablet ? 57 : 46; const blur = c.desktop ? 16 : c.tablet ? 13 : 10;
-          gsap.timeline({ scrollTrigger: { trigger: '.hero-scroll', start: 'top top', end: 'bottom bottom', scrub: .9, invalidateOnRefresh: true, onToggle: s => { const img = document.querySelector<HTMLElement>('.hero-person'); if (img) img.style.willChange = s.isActive ? 'filter, transform, opacity' : ''; } } })
-            .to('.hero-line-a', { x: `${travel}vw`, ease: 'none' }, 0).to('.hero-line-b', { x: `-${travel}vw`, ease: 'none' }, 0)
-            .to('.hero-secondary, .hero-meta', { autoAlpha: 0, y: -16, ease: 'none', duration: .24 }, .08)
-            .to('.hero-person', { filter: `blur(${blur}px)`, scale: 1.03, ease: 'none', duration: .72 }, .18)
-            .to('.hero-person, .portrait-caption', { autoAlpha: 0, y: '-1.5vh', ease: 'none', duration: .16 }, .84);
-        });
+        mm.add('(max-width:767px)', () => gsap.set('.intro-photo', { transformOrigin: '50% 100%' }));
         gsap.utils.toArray<HTMLElement>('.reveal').forEach(el => gsap.fromTo(el, { autoAlpha: 0, y: 34 }, { autoAlpha: 1, y: 0, duration: .85, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 78%', once: true } }));
         gsap.fromTo('.practice-row', { autoAlpha: .22, scale: .97 }, { autoAlpha: 1, scale: 1, stagger: .07, scrollTrigger: { trigger: '.practice-list', start: 'top 72%', end: 'bottom 32%', scrub: .55 } });
         gsap.fromTo('.process', { clipPath: 'inset(100% 0 0)' }, { clipPath: 'inset(0% 0 0)', ease: 'none', scrollTrigger: { trigger: '.process', start: 'top bottom', end: 'top 55%', scrub: .5 } });
@@ -92,19 +111,26 @@ export default function Home() {
         gsap.to(words, { color: (i) => words[i].dataset.gold === 'true' ? '#e0c17b' : '#f5f1e9', stagger: .12, scrollTrigger: { trigger: '.manifesto', start: 'top 88%', end: 'bottom 58%', scrub: .7 } });
         return () => mm.revert();
       }
-      gsap.set(['.reveal', '.practice-row', '.process', '.manifesto-word'], { clearProps: 'all' }); gate.kill();
+      gsap.set(['.reveal', '.practice-row', '.process', '.manifesto-word'], { clearProps: 'all' });
     }, pageRef);
     const refresh = () => ScrollTrigger.refresh(); window.addEventListener('load', refresh, { once: true });
     const fallback = window.setTimeout(() => headerRef.current && gsap.set(headerRef.current, { autoAlpha: 1 }), 3200);
-    dispose = () => { window.clearTimeout(fallback); window.removeEventListener('scroll', onHeaderScroll); window.removeEventListener('load', refresh); ctx.revert(); };
+    dispose = () => { window.clearTimeout(fallback); window.removeEventListener('scroll', onHeaderScroll); window.removeEventListener('load', refresh); document.documentElement.classList.remove('intro-active'); document.documentElement.style.overflow = ''; document.body.style.overflow = ''; ctx.revert(); };
     })();
     return () => { active = false; dispose(); };
   }, []);
-  useEffect(() => { document.body.style.overflow = menuOpen ? 'hidden' : ''; return () => { document.body.style.overflow = ''; }; }, [menuOpen]);
+  useEffect(() => { if (menuOpen) document.body.style.overflow = 'hidden'; else if (!document.documentElement.classList.contains('intro-active')) document.body.style.overflow = ''; return () => { if (!document.documentElement.classList.contains('intro-active')) document.body.style.overflow = ''; }; }, [menuOpen]);
   const closeMenu = () => setMenuOpen(false);
 
   return <div ref={pageRef}>
     <div className="grain" aria-hidden="true" />
+    <div className="site-intro" aria-hidden="true">
+      <div className="intro-glow" />
+      <div className="intro-name intro-name-back"><span className="intro-mask"><span className="intro-line intro-line-a">Dra. Fernanda</span></span></div>
+      <div className="intro-photo"><img src="/fernanda-recorte.png" alt="" width="1146" height="1372" /></div>
+      <div className="intro-name intro-name-front"><span className="intro-mask"><span className="intro-line intro-line-b">Leite</span></span></div>
+      <p className="intro-kicker">Direito do Passageiro Aéreo</p>
+    </div>
     <header ref={headerRef} className={`site-header ${scrolled ? 'scrolled' : ''}`}>
       <a className="brand" href="#inicio" aria-label="Dra. Fernanda Leite — início"><img src="/logo-transparente.png" alt="Dra. Fernanda Leite — Direito Aéreo" width="2171" height="724" /></a>
       <nav className="desktop-nav" aria-label="Navegação principal"><a href="#inicio">Início</a><a href="#atuacao">Atuação</a><a href="#como-funciona">Como funciona</a><a href="#sobre">Sobre</a><a href="#duvidas">Dúvidas</a></nav>
