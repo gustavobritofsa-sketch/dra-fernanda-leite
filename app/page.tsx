@@ -62,50 +62,87 @@ export default function Home() {
       });
     };
     window.addEventListener('scroll', onHeaderScroll, { passive: true });
+    let cleanupIntroListeners = () => {};
     const ctx = gsap.context(() => {
       document.documentElement.classList.add('intro-active');
       document.documentElement.style.overflow = 'hidden';
       document.body.style.overflow = 'hidden';
       gsap.set('.intro-line', { yPercent: 115 });
       gsap.set('.intro-photo', { autoAlpha: 0, scale: .94, y: 40, clipPath: 'inset(100% 0 0)', filter: 'blur(7px)' });
-      gsap.set('.intro-kicker', { autoAlpha: 0, y: 10 });
+      gsap.set(['.intro-kicker', '.intro-scroll-cue'], { autoAlpha: 0, y: 10 });
       gsap.set('.hero-line', { yPercent: 112 });
       gsap.set('.portrait-reveal', { autoAlpha: 0, scale: .98, clipPath: 'inset(12% 0 0)' });
-      gsap.set(['.hero-secondary', '.hero-meta'], { autoAlpha: 0, y: 14 });
+      gsap.set(['.hero-eyebrow', '.hero-support', '.hero-meta'], { autoAlpha: 0, y: 14 });
       gsap.set(headerRef.current, { autoAlpha: 0, y: -10 });
+      let introExitStarted = false;
+      let touchStartY = 0;
+      const removeIntroListeners = () => {
+        window.removeEventListener('wheel', onIntroWheel);
+        window.removeEventListener('keydown', onIntroKeyDown);
+        window.removeEventListener('touchstart', onIntroTouchStart);
+        window.removeEventListener('touchmove', onIntroTouchMove);
+      };
+      cleanupIntroListeners = removeIntroListeners;
       const finishIntro = () => {
+        window.scrollTo(0, 0);
         document.documentElement.classList.remove('intro-active');
         document.documentElement.style.overflow = '';
         document.body.style.overflow = '';
         ScrollTrigger.refresh();
         window.dispatchEvent(new Event('fernanda:intro-complete'));
       };
-      const intro = gsap.timeline({ onComplete: finishIntro });
+      const exitTl = gsap.timeline({ paused: true, onComplete: finishIntro })
+        .to(['.intro-line', '.intro-kicker', '.intro-scroll-cue'], { y: reduced ? -6 : -18, autoAlpha: 0, duration: reduced ? .16 : .34, ease: 'power2.in' }, 0)
+        .to('.intro-photo', { scale: reduced ? 1 : 1.025, y: reduced ? -4 : -10, autoAlpha: reduced ? 0 : .65, duration: reduced ? .2 : .42, ease: 'power2.inOut' }, 0)
+        .to('.site-intro', { clipPath: 'inset(0 0 100% 0)', duration: reduced ? .28 : .62, ease: 'power4.inOut' }, reduced ? .08 : .1)
+        .to('.hero-line-a', { yPercent: 0, duration: reduced ? .2 : .55, ease: 'power3.out' }, .16)
+        .to('.hero-line-b', { yPercent: 0, duration: reduced ? .2 : .55, ease: 'power3.out' }, .22)
+        .to('.portrait-reveal', { autoAlpha: 1, scale: 1, clipPath: 'inset(0)', duration: reduced ? .2 : .5, ease: 'power3.out' }, .18)
+        .to(['.hero-eyebrow', '.hero-support', '.hero-meta'], { autoAlpha: 1, y: 0, duration: reduced ? .18 : .38, stagger: .04, ease: 'power2.out' }, .26)
+        .to(headerRef.current, { autoAlpha: 1, y: 0, duration: reduced ? .18 : .36, ease: 'power2.out' }, .2)
+        .set('.site-intro', { visibility: 'hidden' });
+      const startIntroExit = () => {
+        if (introExitStarted) return;
+        introExitStarted = true;
+        removeIntroListeners();
+        window.scrollTo(0, 0);
+        introIn.progress(1);
+        exitTl.play(0);
+      };
+      function onIntroWheel(event: WheelEvent) { if (event.deltaY > 0) { event.preventDefault(); startIntroExit(); } }
+      function onIntroKeyDown(event: KeyboardEvent) {
+        const target = event.target as HTMLElement | null;
+        if (target?.matches('input, textarea, select, [contenteditable="true"]')) return;
+        if (event.key === 'ArrowDown' || event.key === 'PageDown' || event.key === ' ') { event.preventDefault(); startIntroExit(); }
+      }
+      function onIntroTouchStart(event: TouchEvent) { touchStartY = event.touches[0]?.clientY ?? 0; }
+      function onIntroTouchMove(event: TouchEvent) {
+        const currentY = event.touches[0]?.clientY ?? touchStartY;
+        if (touchStartY - currentY >= 38) { event.preventDefault(); startIntroExit(); }
+      }
+      window.addEventListener('wheel', onIntroWheel, { passive: false });
+      window.addEventListener('keydown', onIntroKeyDown);
+      window.addEventListener('touchstart', onIntroTouchStart, { passive: true });
+      window.addEventListener('touchmove', onIntroTouchMove, { passive: false });
+      const introIn = gsap.timeline();
       if (reduced) {
-        intro.to(['.intro-line', '.intro-photo', '.intro-kicker'], { autoAlpha: 1, yPercent: 0, y: 0, filter: 'blur(0px)', clipPath: 'inset(0)', duration: .25 })
-          .to('.site-intro', { autoAlpha: 0, duration: .22, delay: .25 })
-          .set('.site-intro', { visibility: 'hidden' })
-          .to(['.hero-line', '.portrait-reveal', '.hero-secondary', '.hero-meta', headerRef.current], { autoAlpha: 1, yPercent: 0, y: 0, clipPath: 'inset(0)', duration: .2 }, '-=.18');
+        introIn.to(['.intro-line', '.intro-photo', '.intro-kicker', '.intro-scroll-cue'], { autoAlpha: 1, yPercent: 0, y: 0, filter: 'blur(0px)', clipPath: 'inset(0)', duration: .25 });
       } else {
-        intro.to('.intro-line-a', { yPercent: 0, duration: .95, ease: 'power4.out' }, .15)
-          .to('.intro-line-b', { yPercent: 0, duration: .95, ease: 'power4.out' }, .28)
-          .to('.intro-photo', { autoAlpha: 1, scale: 1, y: 0, clipPath: 'inset(0% 0 0)', filter: 'blur(0px)', duration: 1.08, ease: 'power4.out' }, .4)
-          .to('.intro-kicker', { autoAlpha: 1, y: 0, duration: .42, ease: 'power2.out' }, .82)
-          .to(['.intro-line', '.intro-kicker'], { y: -18, autoAlpha: .45, duration: .42, ease: 'power2.in' }, 1.35)
-          .to('.intro-photo', { scale: 1.025, y: -10, autoAlpha: .72, duration: .48, ease: 'power2.inOut' }, 1.35)
-          .to('.site-intro', { clipPath: 'inset(0 0 100% 0)', duration: .72, ease: 'power4.inOut' }, 1.48)
-          .to('.hero-line-a', { yPercent: 0, duration: .72, ease: 'power4.out' }, 1.55)
-          .to('.hero-line-b', { yPercent: 0, duration: .72, ease: 'power4.out' }, 1.67)
-          .to('.portrait-reveal', { autoAlpha: 1, scale: 1, clipPath: 'inset(0)', duration: .65, ease: 'power3.out' }, 1.58)
-          .to(['.hero-secondary', '.hero-meta'], { autoAlpha: 1, y: 0, duration: .46, stagger: .06, ease: 'power2.out' }, 1.72)
-          .to(headerRef.current, { autoAlpha: 1, y: 0, duration: .42, ease: 'power2.out' }, 1.52)
-          .set('.site-intro', { visibility: 'hidden' });
+        introIn.to('.intro-line-a', { yPercent: 0, duration: .78, ease: 'power4.out' }, .08)
+          .to('.intro-line-b', { yPercent: 0, duration: .78, ease: 'power4.out' }, .18)
+          .to('.intro-photo', { autoAlpha: 1, scale: 1, y: 0, clipPath: 'inset(0% 0 0)', filter: 'blur(0px)', duration: .88, ease: 'power4.out' }, .28)
+          .to(['.intro-kicker', '.intro-scroll-cue'], { autoAlpha: 1, y: 0, duration: .36, stagger: .06, ease: 'power2.out' }, .58);
       }
       if (!reduced) {
         const mm = gsap.matchMedia();
         mm.add('(max-width:767px)', () => gsap.set('.intro-photo', { transformOrigin: '50% 100%' }));
-        gsap.utils.toArray<HTMLElement>('.reveal').forEach(el => gsap.fromTo(el, { autoAlpha: 0, y: 34 }, { autoAlpha: 1, y: 0, duration: .85, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 78%', once: true } }));
-        gsap.fromTo('.practice-row', { autoAlpha: .22, scale: .97 }, { autoAlpha: 1, scale: 1, stagger: .07, scrollTrigger: { trigger: '.practice-list', start: 'top 72%', end: 'bottom 32%', scrub: .55 } });
+        mm.add({ desktop: '(min-width:1024px)', tablet: '(min-width:768px) and (max-width:1023px)', mobile: '(max-width:767px)' }, ({ conditions }) => {
+          const c = conditions as { desktop?: boolean; tablet?: boolean };
+          const y = c.desktop ? 18 : c.tablet ? 15 : 12;
+          const duration = c.desktop ? .52 : c.tablet ? .46 : .4;
+          gsap.utils.toArray<HTMLElement>('.reveal').forEach(el => gsap.fromTo(el, { autoAlpha: 0, y }, { autoAlpha: 1, y: 0, duration, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 90%', once: true } }));
+        });
+        gsap.fromTo('.practice-row', { autoAlpha: .35, y: 12 }, { autoAlpha: 1, y: 0, duration: .45, stagger: .05, ease: 'power2.out', scrollTrigger: { trigger: '.practice-list', start: 'top 90%', once: true } });
         gsap.fromTo('.process', { clipPath: 'inset(100% 0 0)' }, { clipPath: 'inset(0% 0 0)', ease: 'none', scrollTrigger: { trigger: '.process', start: 'top bottom', end: 'top 55%', scrub: .5 } });
         const words = gsap.utils.toArray<HTMLElement>('.manifesto-word');
         gsap.to(words, { color: (i) => words[i].dataset.gold === 'true' ? '#e0c17b' : '#f5f1e9', stagger: .12, scrollTrigger: { trigger: '.manifesto', start: 'top 88%', end: 'bottom 58%', scrub: .7 } });
@@ -114,8 +151,7 @@ export default function Home() {
       gsap.set(['.reveal', '.practice-row', '.process', '.manifesto-word'], { clearProps: 'all' });
     }, pageRef);
     const refresh = () => ScrollTrigger.refresh(); window.addEventListener('load', refresh, { once: true });
-    const fallback = window.setTimeout(() => headerRef.current && gsap.set(headerRef.current, { autoAlpha: 1 }), 3200);
-    dispose = () => { window.clearTimeout(fallback); window.removeEventListener('scroll', onHeaderScroll); window.removeEventListener('load', refresh); document.documentElement.classList.remove('intro-active'); document.documentElement.style.overflow = ''; document.body.style.overflow = ''; ctx.revert(); };
+    dispose = () => { cleanupIntroListeners(); window.removeEventListener('scroll', onHeaderScroll); window.removeEventListener('load', refresh); document.documentElement.classList.remove('intro-active'); document.documentElement.style.overflow = ''; document.body.style.overflow = ''; ctx.revert(); };
     })();
     return () => { active = false; dispose(); };
   }, []);
@@ -130,6 +166,7 @@ export default function Home() {
       <div className="intro-photo"><img src="/fernanda-recorte.png" alt="" width="1146" height="1372" /></div>
       <div className="intro-name intro-name-front"><span className="intro-mask"><span className="intro-line intro-line-b">Leite</span></span></div>
       <p className="intro-kicker">Direito do Passageiro Aéreo</p>
+      <div className="intro-scroll-cue"><span>Role para continuar</span><i /></div>
     </div>
     <header ref={headerRef} className={`site-header ${scrolled ? 'scrolled' : ''}`}>
       <a className="brand" href="#inicio" aria-label="Dra. Fernanda Leite — início"><img src="/logo-transparente.png" alt="Dra. Fernanda Leite — Direito Aéreo" width="2171" height="724" /></a>
@@ -142,7 +179,7 @@ export default function Home() {
     <main>
       <section className="hero-scroll" id="inicio"><div className="hero hero-sticky">
         <div className="route-signature" aria-hidden="true"><span className="route-plane">✦</span></div>
-        <div className="hero-copy"><p className="eyebrow hero-secondary">Direito do passageiro aéreo</p><h1><span className="mask-line"><span className="hero-line hero-line-a">Seu voo saiu do plano.</span></span><span className="mask-line"><em className="hero-line hero-line-b">Seus direitos não.</em></span></h1><div className="hero-secondary"><p className="hero-intro">Atuação jurídica voltada a passageiros que enfrentaram atrasos, cancelamentos, overbooking ou problemas com bagagem.</p><div className="hero-actions"><a className="button button-gold" href={makeWhatsAppUrl()} target="_blank" rel="noreferrer">Conte o que aconteceu <span>↗</span></a><a className="text-link" href="#atuacao">Conheça a atuação <span>↓</span></a></div></div></div>
+        <div className="hero-copy"><p className="eyebrow hero-eyebrow">Direito do passageiro aéreo</p><h1><span className="mask-line"><span className="hero-line hero-line-a">Seu voo saiu do plano.</span></span><span className="mask-line"><em className="hero-line hero-line-b">Seus direitos não.</em></span></h1><div className="hero-support"><p className="hero-intro">Atuação jurídica voltada a passageiros que enfrentaram atrasos, cancelamentos, overbooking ou problemas com bagagem.</p><div className="hero-actions"><a className="button button-gold" href={makeWhatsAppUrl()} target="_blank" rel="noreferrer">Conte o que aconteceu <span>↗</span></a><a className="text-link" href="#atuacao">Conheça a atuação <span>↓</span></a></div></div></div>
         <div className="hero-portrait"><div className="portrait-halo" /><div className="portrait-reveal"><img className="hero-person" src="/fernanda-recorte.png" alt="Retrato profissional da Dra. Fernanda Leite" width="1146" height="1372" /></div><div className="portrait-caption"><span>Fernanda Leite</span><small>Advogada do passageiro aéreo</small></div></div>
         <div className="hero-index" aria-hidden="true">FL · 01</div>
         <div className="hero-meta"><span>Atendimento em Direito do Passageiro Aéreo</span><a className="scroll-indicator" href="#atuacao"><span>Role para explorar</span><i /></a></div>
