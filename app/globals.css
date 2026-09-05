@@ -81,3 +81,7 @@ html.intro-active,html.intro-active body{overscroll-behavior:none}.intro-scroll-
 @media(max-width:430px) and (max-height:720px){.intro-photo{right:-22vw;height:61vh}.intro-name-back{top:7vh}.intro-name-front{top:20vh}.intro-kicker,.intro-scroll-cue{bottom:2.8vh}}
 @media(max-width:340px){.intro-name{left:18px;width:calc(100vw - 36px)}.intro-name-back{font-size:42px}.intro-name-front{left:18px;font-size:72px}.intro-photo{right:-28vw;width:96vw}.intro-kicker{left:18px}.intro-scroll-cue{right:18px}}
 @media(prefers-reduced-motion:reduce){.intro-photo{transform:none!important}}
+
+/* Natural portrait treatment and section motion foundation */
+.about-image .image-frame{overflow:hidden;background:#d9d1c6}.about-image .image-frame:before{inset:0;transform:none;border-color:rgba(169,120,50,.55)}.about-image .image-frame img{filter:saturate(1.03) contrast(1.055) brightness(1.045);transform-origin:center center;will-change:transform,clip-path}.practice-row{transition:background .3s,padding .3s}.section-heading h2,.case-copy h2,.about-copy h2,.faq-heading h2,.final-cta h2{will-change:transform,opacity,clip-path}
+@media(max-width:767px){.about-image .image-frame img{will-change:transform,opacity}.section-heading h2,.case-copy h2,.about-copy h2,.faq-heading h2,.final-cta h2{will-change:transform,opacity}}

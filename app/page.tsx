@@ -138,12 +138,32 @@ export default function Home() {
         mm.add('(max-width:767px)', () => gsap.set('.intro-photo', { transformOrigin: '50% 100%' }));
         mm.add({ desktop: '(min-width:1024px)', tablet: '(min-width:768px) and (max-width:1023px)', mobile: '(max-width:767px)' }, ({ conditions }) => {
           const c = conditions as { desktop?: boolean; tablet?: boolean };
-          const y = c.desktop ? 18 : c.tablet ? 15 : 12;
-          const duration = c.desktop ? .52 : c.tablet ? .46 : .4;
-          gsap.utils.toArray<HTMLElement>('.reveal').forEach(el => gsap.fromTo(el, { autoAlpha: 0, y }, { autoAlpha: 1, y: 0, duration, ease: 'power3.out', scrollTrigger: { trigger: el, start: 'top 90%', once: true } }));
+          const mobile = !c.desktop && !c.tablet;
+          const start = mobile ? 'top 90%' : 'top 88%';
+          gsap.utils.toArray<HTMLElement>('.section-heading h2, .case-copy h2, .about-copy h2, .faq-heading h2, .final-cta h2').forEach((el, index) => {
+            gsap.fromTo(el, { autoAlpha: 0, y: mobile ? 14 : 24, clipPath: mobile ? 'none' : 'inset(0 0 100% 0)' }, { autoAlpha: 1, y: 0, clipPath: 'inset(0 0 0% 0)', duration: mobile ? .46 : .62, ease: 'power3.out', delay: index % 2 ? .03 : 0, scrollTrigger: { trigger: el, start, once: true } });
+          });
+          gsap.utils.toArray<HTMLElement>('.section-heading>p:last-child, .case-copy>p:last-child, .about-copy>p, .faq-heading>p:last-child, .final-cta>p:not(.eyebrow), .legal-note').forEach((el, index) => {
+            gsap.fromTo(el, { autoAlpha: 0, y: mobile ? 10 : 18, x: !mobile && index % 3 === 1 ? 8 : 0 }, { autoAlpha: 1, y: 0, x: 0, duration: mobile ? .38 : .5, ease: 'power2.out', scrollTrigger: { trigger: el, start, once: true } });
+          });
+          const cardGroups = ['.practice-list', '.category-options', '.knowledge-grid', '.timeline', '.accordion'];
+          const cardItems = ['.practice-row', 'button', '.feature-article, .briefs article', 'article', '.faq-item'];
+          cardGroups.forEach((group, index) => {
+            const container = document.querySelector(group);
+            if (!container) return;
+            const items = container.querySelectorAll<HTMLElement>(cardItems[index]);
+            gsap.fromTo(items, { autoAlpha: 0, y: mobile ? 12 : 20, scale: mobile ? 1 : .98 }, { autoAlpha: 1, y: 0, scale: 1, duration: mobile ? .4 : .52, stagger: mobile ? .045 : .07, ease: 'power3.out', scrollTrigger: { trigger: container, start, once: true } });
+          });
+          gsap.utils.toArray<HTMLElement>('.eyebrow:not(.hero-eyebrow), .case-form, .about-copy .gold-rule, .about-copy .text-link, .final-cta .button').forEach((el, index) => {
+            gsap.fromTo(el, { autoAlpha: 0, y: mobile ? 8 : 14, x: !mobile && index % 2 ? 8 : -8 }, { autoAlpha: 1, y: 0, x: 0, duration: mobile ? .36 : .46, ease: 'power2.out', scrollTrigger: { trigger: el, start, once: true } });
+          });
+          const aboutFrame = document.querySelector<HTMLElement>('.about-image .image-frame');
+          const aboutPhoto = document.querySelector<HTMLElement>('.about-image img');
+          if (aboutFrame && aboutPhoto) {
+            gsap.fromTo(aboutFrame, { autoAlpha: 0, y: mobile ? 12 : 20, clipPath: mobile ? 'none' : 'inset(0 0 100% 0)' }, { autoAlpha: 1, y: 0, clipPath: 'inset(0)', duration: mobile ? .44 : .68, ease: 'power3.out', scrollTrigger: { trigger: aboutFrame, start, once: true } });
+            gsap.fromTo(aboutPhoto, { scale: mobile ? 1.015 : 1.04, yPercent: mobile ? 0 : 1.5 }, { scale: 1, yPercent: 0, duration: mobile ? .48 : .75, ease: 'power3.out', scrollTrigger: { trigger: aboutFrame, start, once: true } });
+          }
         });
-        gsap.fromTo('.practice-row', { autoAlpha: .35, y: 12 }, { autoAlpha: 1, y: 0, duration: .45, stagger: .05, ease: 'power2.out', scrollTrigger: { trigger: '.practice-list', start: 'top 90%', once: true } });
-        gsap.fromTo('.process', { clipPath: 'inset(100% 0 0)' }, { clipPath: 'inset(0% 0 0)', ease: 'none', scrollTrigger: { trigger: '.process', start: 'top bottom', end: 'top 55%', scrub: .5 } });
         const words = gsap.utils.toArray<HTMLElement>('.manifesto-word');
         gsap.to(words, { color: (i) => words[i].dataset.gold === 'true' ? '#e0c17b' : '#f5f1e9', stagger: .12, scrollTrigger: { trigger: '.manifesto', start: 'top 88%', end: 'bottom 58%', scrub: .7 } });
         return () => mm.revert();
