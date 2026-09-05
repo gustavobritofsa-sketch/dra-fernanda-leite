@@ -182,7 +182,7 @@ export default function Home() {
     <div className="grain" aria-hidden="true" />
     <div className="site-intro" aria-hidden="true">
       <div className="intro-glow" />
-      <div className="intro-name intro-name-back"><span className="intro-mask"><span className="intro-line intro-line-a">Dra. Fernanda</span></span></div>
+      <div className="intro-name intro-name-back"><span className="intro-mask"><span className="intro-line intro-line-a">Dra.<br className="mobile-name-break" />Fernanda</span></span></div>
       <div className="intro-photo"><img src="/fernanda-recorte.png" alt="" width="1146" height="1372" /></div>
       <div className="intro-name intro-name-front"><span className="intro-mask"><span className="intro-line intro-line-b">Leite</span></span></div>
       <p className="intro-kicker">Direito do Passageiro Aéreo</p>
